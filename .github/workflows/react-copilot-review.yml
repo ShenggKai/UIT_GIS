@@ -1,0 +1,109 @@
+name: React Copilot Code Review
+
+on:
+  pull_request:
+    branches:
+      - main
+      - Deploy
+
+jobs:
+  copilot-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install GitHub Copilot CLI
+        run: |
+          npm install -g @githubnext/github-copilot-cli
+          # Add the global npm bin directory to the PATH so we can call 'copilot'
+          echo "PATH=$(npm bin -g):$PATH" >> $GITHUB_ENV
+
+      - name: Authenticate GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: gh auth status
+
+      - name: Run GitHub Copilot Code Review
+        run: copilot review .
+
+      - name: Post Copilot Review Comments
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GH_PAT }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            const reviewBody = "GitHub Copilot has reviewed the code. Suggestions will be visible in the workflow logs.";
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number: prNumber,
+              body: reviewBody,
+              event: "COMMENT"
+            });
+
+  code-quality:
+    needs: copilot-review
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint (Linting)
+        run: npm run lint
+
+      - name: Run TypeScript Check
+        run: npm run type-check
+
+      - name: Run Jest Tests
+        run: npm run test -- --ci --coverage
+
+      - name: Run Prettier Check
+        run: npm run prettier -- --check .
+
+  auto-fix:
+    needs: code-quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fix ESLint Issues
+        run: npm run lint -- --fix
+
+      - name: Fix Formatting (Prettier)
+        run: npm run prettier -- --write .
+
+      - name: Commit and Push Fixes
+        run: |
+          git config --global user.email "bot@example.com"
+          git config --global user.name "GitHub Bot"
+          git add .
+          git commit -m "Apply automated linting & formatting fixes" || echo "No changes to commit"
+          git push
