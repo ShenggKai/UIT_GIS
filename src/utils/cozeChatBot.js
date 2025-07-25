@@ -1,11 +1,12 @@
 window.COZE_TOKEN = import.meta.env.VITE_COZE_TOKEN;
+window.COZE_BOT_ID = import.meta.env.VITE_COZE_BOT_ID;
 
 new CozeWebSDK.WebChatClient({
     config: {
-        bot_id: '7531007441476714503',
+        bot_id: window.COZE_BOT_ID,
     },
     componentProps: {
-        title: 'Coze',
+        title: 'Chat with UIT Bot',
     },
     auth: {
         type: 'token',

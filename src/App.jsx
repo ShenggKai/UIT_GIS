@@ -16,7 +16,6 @@ import {
 } from "@mui/material";
 import Sidebar from "../Components/Sidebar.jsx";
 import MapView from "../Components/Mapview.jsx";
-import CollapsibleTable from "../Components/CollapsableTable.jsx";
 import AuthForm from "../Components/AuthForm.jsx";
 import ForgotPasswordForm from "../Components/ForgotPasswordForm.jsx";
 import Dashboard from "../Components/Dashboard.jsx";
@@ -64,9 +63,8 @@ function App() {
       const errorMessage =
         Array.isArray(response.errors) && response.errors.length > 0
           ? response.errors[0].message
-          : `${SNACKBAR_MESSAGES.LOGIN_FAILURE}${
-              response.message ? `: ${response.message}` : ""
-            }`;
+          : `${SNACKBAR_MESSAGES.LOGIN_FAILURE}${response.message ? `: ${response.message}` : ""
+          }`;
       showSnackbar(errorMessage, SNACKBAR_SEVERITIES.ERROR);
     }
   };
@@ -80,9 +78,8 @@ function App() {
       const errorMessage =
         Array.isArray(response.errors) && response.errors.length > 0
           ? response.errors[0].message
-          : `${SNACKBAR_MESSAGES.LOGOUT_FAILURE}${
-              response.message ? `: ${response.message}` : ""
-            }`;
+          : `${SNACKBAR_MESSAGES.LOGOUT_FAILURE}${response.message ? `: ${response.message}` : ""
+          }`;
       showSnackbar(errorMessage, SNACKBAR_SEVERITIES.ERROR);
     }
   };
@@ -182,6 +179,9 @@ function App() {
           <Button color="inherit" onClick={() => window.location.reload()}>
             Home
           </Button>
+          <Button color="inherit" onClick={() => window.location.reload()}>
+            Review
+          </Button>
           {isAuthenticated ? (
             <Button color="inherit" onClick={handleLogout}>
               Sign out
@@ -215,7 +215,6 @@ function App() {
           {currentView === "map" && (
             <>
               <MapView />
-              <CollapsibleTable />
             </>
           )}
           {currentView === "dashboard" && (
