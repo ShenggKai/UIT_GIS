@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { API_BASE_URL} from "../../constants/others";
 
-const allAuthEndpoint =
-  "https://webgis-django.onrender.com/_allauth/app/v1/auth";
+const allAuthEndpoint = `${API_BASE_URL}/api/auth`;
 
 export const useAuthStore = create(
   persist(
@@ -69,16 +69,19 @@ export const useAuthStore = create(
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ username: email, password }),
+            credentials: "include", // Đảm bảo cookie được gửi và nhận
           });
 
           const data = await response.json();
 
           if (response.ok) {
+            // Session token is set in cookie by server, but JS can't read HttpOnly cookies.
+            // So we just mark as authenticated and rely on cookie for future requests.
             set({
               user: data.user,
               isAuthenticated: true,
-              sessionToken: data.meta.session_token,
+              sessionToken: null, // Can't access sessionid directly if HttpOnly
             });
             return { success: true, message: "Login successful!" };
           } else {
@@ -99,25 +102,16 @@ export const useAuthStore = create(
       // ✅ Logout User
       logout: async () => {
         try {
-          const sessionToken = get().sessionToken;
-          if (!sessionToken) {
-            console.error("Session token missing. Cannot log out.");
-            return {
-              success: false,
-              message: "Session token missing. Cannot log out.",
-            };
-          }
-
-          // Send DELETE request to the logout endpoint.
+          // Session token is not needed if using cookie-based auth
           const response = await fetch(`${allAuthEndpoint}/session`, {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
-              "X-Session-Token": sessionToken,
             },
+            credentials: "include",
           });
 
-          if (response.status === 401) {
+          if (response.status === 200) {
             set({ user: null, isAuthenticated: false, sessionToken: null });
             return { success: true, message: "Logout successful!" };
           } else {

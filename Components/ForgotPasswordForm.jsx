@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { TextField, Button, Box, Typography } from "@mui/material";
 import PropTypes from "prop-types";
-import { BASE_URL } from "../constants/others";
+import { API_BASE_URL } from "../constants/others.js";
 
 const ForgotPasswordForm = ({ onClose }) => {
   const {
@@ -15,7 +15,7 @@ const ForgotPasswordForm = ({ onClose }) => {
 
   const onSubmit = async (data) => {
     try {
-      const res = await fetch(`${BASE_URL}/password/request`, {
+      const res = await fetch(`${API_BASE_URL}/password/request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
